@@ -88,17 +88,32 @@ function ru(ndims, i, bias=.3)
     return v
 end
 
-function collapse(v, dims)
+function collapse(ψ::Vector, dims)
     # Prepare the new vector with zeroes everywhere.
-    z = zeros(length(v))
+    z = zeros(length(ψ))
     # Take over the entries of the selected dimensions.
     for i ∈ dims
-        z[i] = v[i]
+        z[i] = ψ[i]
     end
-    # Re-normalise.
-    z /= norm(z)
-    # Deliver.
-    return z
+    # Re-normalise the result and deliver.
+    return z / norm(z)
+end
+
+"""
+    collapse(ψ::Vector, A::Matrix)
+
+Collapse the identity vector `ψ` onto the column space of `A`. The columns of
+`A` should span a subspace of the identity space in which `ψ` lives. In other
+words, the columns of of `A` should be in the same space as `ψ`. Collapsing is
+orthogonal projection followed by rescaling to unit euclidean length.
+"""
+function collapse(ψ::Vector, A::Matrix)
+    # First compute the projection matrix onto the column space of A.
+    P = ((A'*A)^-1) * A'
+    # Compute the projection of v onto the columns space of A.
+    z = P*ψ
+    # Re-normalise the result and deliver.
+    return z / norm(z)
 end
 
 
