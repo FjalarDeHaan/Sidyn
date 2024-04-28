@@ -79,7 +79,7 @@ angle(a, b) = acos(a ⋅ b / (norm(a)*norm(b)))
 
 polar(r, phi) = r * [ cos(phi), sin(phi) ]
 
-function ru(ndims, i, bias=.3)
+function ru(ndims, i=1, bias=nothing) # .3)
     v = randn(ndims)/10
     if !isnothing(bias)
         v[i] = (randn(1)[1])/5 +  bias
@@ -100,22 +100,38 @@ function collapse(ψ::Vector, dims)
 end
 
 """
-    collapse(ψ::Vector, A::Matrix)
+    project(ψ::Vector, A::Matrix; yield=:coordinates)
 
-Collapse the identity vector `ψ` onto the column space of `A`. The columns of
-`A` should span a subspace of the identity space in which `ψ` lives. In other
-words, the columns of of `A` should be in the same space as `ψ`. Collapsing is
-orthogonal projection followed by rescaling to unit euclidean length.
+Project the identity vector `ψ` onto the column space of `A`. By default the
+coordinates against the columns of `A` are returned. To instead have the actual
+projection vector returned, pass `yield=:vector.
 """
-function collapse(ψ::Vector, A::Matrix)
-    # First compute the projection matrix onto the column space of A.
-    P = ((A'*A)^-1) * A'
-    # Compute the projection of v onto the columns space of A.
+function project(ψ::Vector, A::Matrix; yield=:coordinates)
+    # Determine whether coordinates against A or the projection of ψ are needed.
+    check = 0
+    yield == :coordinates ?  P = ((A'*A)^-1) * A'     : check += 1
+    yield == :vector      ?  P = A * ((A'*A)^-1) * A' : check += 1
+    if check > 1
+        error("Wrong value for argument `yield`: $yield")
+    end
+    # Compute coordinates of v against A's columns or the vector they represent.
     z = P*ψ
-    # Re-normalise the result and deliver.
-    return z / norm(z)
+    # Deliver.
+    return z
 end
 
+"""
+    collapse(ψ::Vector, A::Matrix; yield=:coordinates)
+
+Collapse the identity vector `ψ` onto the column space of `A`. Collapsing is
+orthogonal projection followed by rescaling to unit euclidean length. By
+default the coordinates against the columns of `A` are returned. To instead
+have the actual projection vector returned, pass `yield=:vector.
+"""
+function collapse(ψ::Vector, A::Matrix; yield=:coordinates)
+    # Project, re-normalise, deliver.
+    return project(ψ, A, yield=yield) / norm(project(ψ, A, yield=:vector))
+end
 
 
 # Export everything this module has to offer --- temporary convenience.
