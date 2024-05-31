@@ -106,7 +106,7 @@ end
 """
     e(i::Integer, d::Integer)
 
-Return a standard basis vector along the `i`th of `d` dimensions as a `AbstractVector`
+Return a standard basis vector along the `i`th of `d` dimensions as a `Vector`
 of `Float64`s.
 """
 e(i::Integer, d::Integer) = [ i == j ? 1.0 : 0.0 for j ∈ 1:d ]
@@ -115,7 +115,7 @@ e(i::Integer, d::Integer) = [ i == j ? 1.0 : 0.0 for j ∈ 1:d ]
     e(i::Integer, ψ::AbstractVector)
 
 Return a standard basis vector along the `i`th of the number of dimensions  of
-`ψ` as a `AbstractVector` of `Float64`s.
+`ψ` as a `Vector` of `Float64`s.
 """
 e(i::Integer, ψ::AbstractVector) = [ i == j ? 1.0 : 0.0 for j ∈ 1:length(ψ) ]
 

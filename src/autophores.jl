@@ -16,12 +16,16 @@ StaticArrays.similar_type( ::Type{A}
                          , ::Type{Float64}
                          , ::S ) where {A<:Autophore, S<:(Size)} = Autophore
 
-function Autophore(values::Vector; normalised=true)
+function Autophore(values::AbstractVector; normalised=true)
     if normalised
         return Autophore{length(values)}(values/norm(values))
     else
         return Autophore{length(values)}(values)
     end
+end
+
+function Autophore(rng::AbstractRNG, n::Int)
+    return Autophore(rand(rng, n) .- .5)
 end
 
 function Autophore(n::Int)
@@ -65,3 +69,7 @@ function Base.show(io::IO, ψ::Autophore)
 end
 
 Base.display(ψ::Autophore) = show(ψ)
+
+function normalise(ψ::Autophore)
+    return ψ / norm(ψ)
+end
