@@ -1,25 +1,65 @@
-struct Autophore <: AbstractVector{Float64}
-    v::Vector{Float64} # Components of the autophore.
-    λ::Float64 # Susceptibility, i.e. 1 - stubbornness.
-    Autophore(v, λ) = new(v/norm(v), λ)
+using StaticArrays
+using Random
+
+struct Autophore{N, Float64} <: StaticVector{N, Float64}
+    values::NTuple{N, Float64}
 end
 
-Autophore(v::Vector) = Autophore(v, 1.0)
+@inline Base.getindex(ψ::Autophore, i::Int64) = ( @boundscheck checkbounds(ψ,i)
+                                                ; ψ.values[Base.to_index(i)] )
 
-Base.size(ψ::Autophore) = (length(ψ.v),)
-Base.getindex(ψ::Autophore, i::Int) = ψ.v[i]
+function (::Type{Autophore{N}})(d::NTuple{N,Float64}) where {N, Float64}
+    return Autophore{N,Float64}(d)
+end
+
+StaticArrays.similar_type( ::Type{A}
+                         , ::Type{Float64}
+                         , ::S ) where {A<:Autophore, S<:(Size)} = Autophore
+
+function Autophore(values::Vector; normalised=true)
+    if normalised
+        return Autophore{length(values)}(values/norm(values))
+    else
+        return Autophore{length(values)}(values)
+    end
+end
+
+function Autophore(n::Int)
+    return Autophore(rand(n) .- .5)
+end
 
 function Base.show(io::IO, ψ::Autophore)
+    if norm(ψ) > 1
     println( io
-           , length(ψ.v), "-dimensional identity vector "
-           , "(λ = ", ψ.λ, "):" )
-    for i in 1:length(ψ.v)
-        if ψ.v[i] == 1.0
-            println(io, " 1") #, @sprintf "%0.6f" ψ.v[i])
-        elseif ψ.v[i] == 0.0
-            println(io, " 0")
-        else
-            println(io, "  ", (@sprintf "%0.6f" ψ.v[i])[2:end])
+           , length(ψ.values)
+           , "-dimensional identity vector "
+           , "(norm ≈ ", (@sprintf "%0.2f" norm(ψ)), "):" )
+        for i in 1:length(ψ.values)
+            if ψ.values[i] < 0
+                println(io, " ", ψ.values[i])
+            else
+                println(io, "  ", ψ.values[i])
+            end
+        end
+    else
+    println( io
+           , length(ψ.values)
+           , "-dimensional identity vector (normalised):" )
+        for i in 1:length(ψ.values)
+            s = string(ψ.values[i])
+            if ψ.values[i] == 1.0
+                println(io, "  1")
+            elseif ψ.values[i] == -1.0
+                println(io, " -1")
+            elseif ψ.values[i] == 0.0
+                println(io, "  0")
+            else
+                if s[1] == string(-1)[1]
+                    println(io, " - ", s[3:end])
+                else
+                    println(io, "   ", s[2:end])
+                end
+            end
         end
     end
 end
